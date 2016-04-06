@@ -14,7 +14,9 @@ public struct PixelColor {
     let alpha: CGFloat
     
     func toInt32() -> UInt32 {
-        return UInt32(red.toColorUInt8()) << 24 | UInt32(green.toColorUInt8()) << 16 | UInt32(blue.toColorUInt8()) << 8 | UInt32(alpha.toColorUInt8())
+        
+        // Unix reverse store binary
+        return UInt32(alpha.toColorUInt8()) << (24 - 24) | UInt32(red.toColorUInt8()) << (24 - 16) | UInt32(green.toColorUInt8()) << (24 - 8) | UInt32(blue.toColorUInt8()) << (24 - 0)
     }
     
     func averageWith(color: PixelColor, w: CGFloat) -> PixelColor {
@@ -151,12 +153,10 @@ public func lineGradientImage(size: CGSize, colors: [UIColor]) -> UIImage {
         let bytePerRow = bytePerPixel * w
         
         let data = NSMutableData()
-        var preX = 0
-        for y in 0..<h {
+        for _ in 0..<h {
             for x in 0..<w {
 
                 let progress = (Double(x) / Double(w))
-//                preX = x
                 let t = progress * Double(colorCount - 1)
                 let i = Int(t)
                 let nexti = (i + 1) >= colorCount ? colorCount - 1 : i + 1
@@ -165,10 +165,7 @@ public func lineGradientImage(size: CGSize, colors: [UIColor]) -> UIImage {
                 let c = pixelColors[i]
                 let nc = pixelColors[nexti]
                 var middleColor = c.averageWith(nc, w: deltW).toInt32()
-                
                 data.appendBytes(&middleColor, length: bytePerPixel)
-                
-                
             }
         }
         
@@ -178,9 +175,6 @@ public func lineGradientImage(size: CGSize, colors: [UIColor]) -> UIImage {
         let ctx = CGBitmapContextCreate(data.mutableBytes, w, h, bitPerComponent,
                                         bytePerRow, colorSpace, bitmapInfo.rawValue)
         let img = CGBitmapContextCreateImage(ctx)!
-        
         return UIImage(CGImage: img)
-        
     }
-    
 }
